@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Experiência Interativa</title>
+<style>
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+
+  body {
+    font-family: Arial, sans-serif;
+    background: #fff;
+    color: #333;
+    overflow-x: hidden;
+  }
+
+  #fade-overlay {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: #000;
+    opacity: 0;
+    pointer-events: none;
+    z-index: 9999;
+    transition: opacity 0.45s ease;
+  }
+  #fade-overlay.fading-out {
+    opacity: 1;
+    pointer-events: all;
+  }
+
+  .page {
+    display: none;
+    padding: 40px 20px;
+    min-height: 100vh;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    position: relative;
+  }
+  .page.active {
+    display: flex;
+  }
+
+  .overlay {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: rgba(0,0,0,0.4);
+    z-index: 1;
+  }
+
+  h1 {
+    font-size: clamp(1.6em, 5vw, 3em);
+    margin-bottom: 16px;
+    z-index: 2;
+    position: relative;
+    line-height: 1.2;
+  }
+  h2 {
+    font-size: clamp(1.1em, 3vw, 2em);
+    margin: 16px 0;
+    z-index: 2;
+    position: relative;
+    line-height: 1.3;
+  }
+  p {
+    font-size: clamp(1em, 2.5vw, 1.2em);
+    margin: 10px 0;
+    z-index: 2;
+    position: relative;
+    max-width: 680px;
+    line-height: 1.6;
+  }
+
+  .btn {
+    display: inline-block;
+    margin: 24px auto 0;
+    padding: 14px 28px;
+    background: #ff8c00;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-size: clamp(15px, 3vw, 18px);
+    cursor: pointer;
+    z-index: 2;
+    position: relative;
+    transition: background 0.2s;
+    touch-action: manipulation;
+  }
+  .btn:hover { background: #e07b00; }
+
+  .products, .free-items {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 16px;
+    z-index: 2;
+    position: relative;
+    width: 100%;
+    max-width: 960px;
+    margin: 20px 0;
+  }
+
+  .product, .item {
+    width: clamp(130px, 40vw, 180px);
+    text-align: center;
+  }
+
+  .product img, .item img {
+    width: 100%;
+    height: 130px;
+    object-fit: cover;
+    border-radius: 10px;
+    display: block;
+  }
+
+  .product-name, .item-name {
+    margin-top: 6px;
+    font-size: clamp(0.8em, 2.5vw, 0.95em);
+    font-weight: 600;
+  }
+  .product-price {
+    font-size: clamp(0.75em, 2vw, 0.9em);
+    color: #555;
+    margin-top: 2px;
+  }
+
+  .album {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 12px;
+    z-index: 2;
+    position: relative;
+    max-width: 900px;
+    width: 100%;
+    margin: 16px 0;
+  }
+
+  .photo-frame {
+    width: clamp(100px, 28vw, 160px);
+    text-align: center;
+    cursor: pointer;
+    position: relative;
+  }
+  .photo-frame img {
+    width: 100%;
+    height: clamp(80px, 22vw, 130px);
+    object-fit: cover;
+    border-radius: 8px;
+    border: 3px solid #ccc;
+    background: #eee;
+    display: block;
+    transition: border-color 0.2s;
+  }
+  .photo-frame:hover img { border-color: #ff8c00; }
+  .photo-frame .placeholder-label {
+    font-size: 0.7em;
+    color: #888;
+    margin-top: 4px;
+  }
+
+  #pagina1 { background: linear-gradient(to bottom, #ffb347, #ffcc33); color: #fff; }
+
+  #pagina7 {
+    background: url('https://st2.depositphotos.com/1073974/7261/i/950/depositphotos_72613027-stock-photo-page-of-vintage-photo-album.jpg') center/cover no-repeat;
+    color: #333;
+  }
+  #pagina7 h1 { color: #C69A5A; }
+  #pagina7 p { color: #222; }
+
+  .item .btn { margin-top: 10px; }
+
+  #lightbox {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.88);
+    z-index: 10000;
+    justify-content: center;
+    align-items: center;
+    cursor: zoom-out;
+    padding: 20px;
+  }
+  #lightbox.open { display: flex; }
+  #lightbox img {
+    max-width: 92vw;
+    max-height: 88vh;
+    border-radius: 10px;
+    object-fit: contain;
+    box-shadow: 0 8px 40px rgba(0,0,0,0.6);
+    cursor: default;
+    animation: lb-in 0.22s ease;
+  }
+  @keyframes lb-in {
+    from { opacity: 0; transform: scale(0.92); }
+    to   { opacity: 1; transform: scale(1); }
+  }
+  #lightbox-close {
+    position: absolute;
+    top: 16px;
+    right: 20px;
+    color: #fff;
+    font-size: 32px;
+    cursor: pointer;
+    line-height: 1;
+    user-select: none;
+  }
+  .product img, .item img { cursor: zoom-in; }
+</style>
+</head>
+<body>
+
+<div id="fade-overlay"></div>
+
+<iframe id="yt-player"
+  src=""
+  style="position:fixed;top:-1px;left:-1px;width:1px;height:1px;border:none;pointer-events:none;opacity:0;"
+  allow="autoplay; encrypted-media">
+</iframe>
+
+<!-- Página 1 -->
+<div class="page active" id="pagina1">
+  <h1>Algumas presenças permanecem...</h1>
+  <p>Ainda que não nomeadas.</p>
+  <button class="btn" onclick="startMusic(); goTo('pagina2')">Descobrir</button>
+</div>
+
+<!-- Página 2 -->
+<div class="page" id="pagina2">
+  <h1>Algumas coisas têm seu preço.</h1>
+  <p>Ainda que voláteis.</p>
+  <div class="products">
+    <div class="product">
+      <img src="https://i0.wp.com/loucosporcarro.com.br/wp-content/uploads/2016/12/Blog-1-2.jpg?resize=800%2C450&ssl=1" alt="Honda Civic">
+      <div class="product-name">Honda Civic</div>
+      <div class="product-price">R$ 120.000</div>
+    </div>
+    <div class="product">
+      <img src="https://images.tcdn.com.br/img/img_prod/497460/camiseta_infantil_branca_basica_1604_1_86367710bf8eb1ab63b1af47ad456ffb_20251104171834.jpg" alt="Camiseta Masculina">
+      <div class="product-name">Camiseta Masculina</div>
+      <div class="product-price">R$ 80</div>
+    </div>
+    <div class="product">
+      <img src="https://escolhasegura.com.br/wp-content/uploads/2025/01/Apple-iPhone-16-Pro-Review-800x440.jpg" alt="Celular Novo">
+      <div class="product-name">Celular Novo</div>
+      <div class="product-price">R$ 5.200</div>
+    </div>
+    <div class="product">
+      <img src="https://imgmd.net/images/c_limit%2Cw_2400/v1/guia/5207908/praia-grande-todas-as-dicas-da-praia-pertinho-de-sao-paulo.jpg" alt="Praia">
+      <div class="product-name">Praia</div>
+      <div class="product-price">R$ 1.500</div>
+    </div>
+    <div class="product">
+      <img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEiuXdnLWs2iAioMca0h3dRasxazbvI1ea-VtunaweTwvF-atpx-Bbfue8Yeuxw0ngDv7nqbNJgvY71bZFqOOIukMtYUd3xEbZxSbdR5Aor4Vl_v9Ewb-aIX_ddoEcepMPfvuEWz_yyIHwMySgsAXGTLKJkqnltbG5RkihjR0dzCrLf3OWcVGvd4swry/s2000/macarr%C3%A3o-ao-alho-e-%C3%B3leo.jpg" alt="Macarrão Alho e Óleo">
+      <div class="product-name">Macarrão ao alho e óleo</div>
+      <div class="product-price">R$ 40</div>
+    </div>
+    <div class="product">
+      <img src="https://receitatodahora.com.br/wp-content/uploads/2024/08/sonho-de-padaria-1408.jpg.webp" alt="Sonho de Padaria">
+      <div class="product-name">Sonho de Padaria</div>
+      <div class="product-price">R$ 4</div>
+    </div>
+    <div class="product">
+      <img src="https://bahamas.com.br/wp-content/uploads/2024/09/adobestock-278246702-scaled-1-1536x1025.jpeg" alt="Sorvete">
+      <div class="product-name">Sorvete</div>
+      <div class="product-price">R$ 10</div>
+    </div>
+  </div>
+  <button class="btn" onclick="goTo('pagina3')">Continuar</button>
+</div>
+
+<!-- Página 3 -->
+<div class="page" id="pagina3">
+  <h1>Outras... não têm preço.</h1>
+  <p>Todas as opções a seguir são gratuitas.</p>
+  <div class="free-items">
+    <div class="item">
+      <img src="https://img.freepik.com/vetores-premium/de-volta-a-escola-construir-fortes-relacoes-com-os-clientes_1236599-22139.jpg?ga=GA1.1.639260951.1773391713&semt=ais_hybrid&w=740&q=80" alt="Sorriso Bobo">
+      <div class="item-name">Sorriso Bobo</div>
+    </div>
+    <div class="item">
+      <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTosqVuYTBgZ0HbFaglM1KL6PxgX-aEDgZj-nj2hoQpSoG0yRHUn6PaEMg&s=10" alt="Dividir comida">
+      <div class="item-name">Dividir comida</div>
+    </div>
+    <div class="item">
+      <img src="https://www.parquedasaves.com.br/wp-content/uploads/2024/04/Tucano-toco.-Fabricio-Vilela-de-Araujo.jpg" alt="Sentar e apreciar a natureza">
+      <div class="item-name">Sentar e apreciar a natureza</div>
+    </div>
+    <div class="item">
+      <img src="https://uniquecafes.com.br/wp-content/uploads/2024/03/Suporte-para-coador-de-pano.webp" alt="Tomar café em boa companhia">
+      <div class="item-name">Tomar café em boa companhia</div>
+    </div>
+    <div class="item">
+      <img src="https://www.artnet.com/WebServices/images/ll97540lldo8yJFg3okR3CfDrCWvaHBOcqFkG/paws-inc.-jim-davis-studio---garfield-and-odie-illustration-original-art-(c.-1980s).jpg" alt="Irritar alguém que goste">
+      <div class="item-name">Irritar alguém que goste</div>
+    </div>
+    <div class="item">
+      <img src="https://profactiva.wordpress.com/wp-content/uploads/2022/10/abracos.jpg?w=390&h=537" alt="Abraços intermináveis">
+      <div class="item-name">Abraços intermináveis</div>
+    </div>
+    <div class="item">
+      <img src="https://super.abril.com.br/wp-content/uploads/2025/09/2809-sonhos-layout_site1.jpg?quality=70&strip=info&w=720&h=440&crop=1" alt="Seguir seus sonhos">
+      <div class="item-name">Seguir seus sonhos</div>
+      <button class="btn" onclick="goTo('pagina4')">Embarcar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Página 4 -->
+<div class="page" id="pagina4" style="background: url('https://images.unsplash.com/photo-1693683197888-81eeadae982c?q=80&w=1287&auto=format&fit=crop') center/cover no-repeat; color:#fff;">
+  <div class="overlay"></div>
+  <h1>Quantos medos existem?</h1>
+  <p>Alguns vem da altura. Outros da possibilidade de sentir.</p>
+  <h2>Coragem não está em não temer —<br>mas em continuar mesmo sabendo disso.</h2>
+  <button class="btn" onclick="goTo('pagina5')">Seguir</button>
+</div>
+
+<!-- Página 5 -->
+<div class="page" id="pagina5" style="background: url('https://img.freepik.com/fotos-gratis/foto-vertical-de-uma-aurora-no-ceu-acima-das-colinas-e-montanhas-cobertas-de-neve-na-noruega_181624-18648.jpg') center/cover no-repeat; color:#fff;">
+  <div class="overlay"></div>
+  <h1>Frio e luzes que inspiram desejos.</h1>
+  <p>
+    Luzes a ecoar pela vastidão, falsa monocromia a romper a noite.<br>
+    Não se propõe fusão — não é arco-íris, ainda que encante.<br>
+    És apenas reflexo indomável, sem clamar protagonismo — atravessa.<br>
+    Gênese do invisível e inevitável, da absorção e emissão.<br>
+    Reside às margens do mundo, a encontrar beleza na colisão do inexplicável.<br>
+    Caos sem juízes, réu ignorado, veredito inconstante do tempo.<br>
+    Dança anônima, fragmentada, a buscar parceiros capazes de ressoar.<br>
+    É espectro, é resposta silenciosa, é incompletude perfeita.<br>
+    Simplesmente, aurora boreal.
+  </p>
+  <button class="btn" onclick="goTo('pagina6')">Arriscar</button>
+</div>
+
+<!-- Página 6 -->
+<div class="page" id="pagina6" style="background: url('https://amazonasatual.com.br/wp-content/uploads/2019/05/WhatsApp-Image-2019-05-05-at-20.32.19-1140x641.jpeg') center/cover no-repeat; color:#fff;">
+  <div class="overlay"></div>
+  <h1>Rios que se encontram...</h1>
+  <p>Mesmo com todas suas diferenças, coexistem.</p>
+  <p>Espalhando vida por onde passam.</p>
+  <button class="btn" onclick="goTo('pagina7')">Criar Memórias</button>
+</div>
+
+<!-- Página 7 -->
+<div class="page" id="pagina7">
+  <h1>Memórias não nascem prontas,<br>são criadas a cada instante.</h1>
+  <p>(Clique nas molduras para adicionar suas próprias fotos)</p>
+  <div class="album">
+    <div class="photo-frame" onclick="uploadPhoto(this)">
+      <img src="https://media.istockphoto.com/id/1180394598/pt/vetorial/photo-camera-doodle-icon.jpg?s=612x612&w=0&k=20&c=fBGL-aWysSfVbq7BtEl1CNc4Ke8-VdIdGHBsNAelcA4=" alt="Foto 1">
+      <input type="file" accept="image/*" style="display:none;" onchange="previewPhoto(event, this)">
+      <div class="placeholder-label">Foto 1</div>
+    </div>
+    <div class="photo-frame" onclick="uploadPhoto(this)">
+      <img src="https://media.istockphoto.com/id/1180394598/pt/vetorial/photo-camera-doodle-icon.jpg?s=612x612&w=0&k=20&c=fBGL-aWysSfVbq7BtEl1CNc4Ke8-VdIdGHBsNAelcA4=" alt="Foto 2">
+      <input type="file" accept="image/*" style="display:none;" onchange="previewPhoto(event, this)">
+      <div class="placeholder-label">Foto 2</div>
+    </div>
+    <div class="photo-frame" onclick="uploadPhoto(this)">
+      <img src="https://media.istockphoto.com/id/1180394598/pt/vetorial/photo-camera-doodle-icon.jpg?s=612x612&w=0&k=20&c=fBGL-aWysSfVbq7BtEl1CNc4Ke8-VdIdGHBsNAelcA4=" alt="Foto 3">
+      <input type="file" accept="image/*" style="display:none;" onchange="previewPhoto(event, this)">
+      <div class="placeholder-label">Foto 3</div>
+    </div>
+    <div class="photo-frame" onclick="uploadPhoto(this)">
+      <img src="https://media.istockphoto.com/id/1180394598/pt/vetorial/photo-camera-doodle-icon.jpg?s=612x612&w=0&k=20&c=fBGL-aWysSfVbq7BtEl1CNc4Ke8-VdIdGHBsNAelcA4=" alt="Foto 4">
+      <input type="file" accept="image/*" style="display:none;" onchange="previewPhoto(event, this)">
+      <div class="placeholder-label">Foto 4</div>
+    </div>
+    <div class="photo-frame" onclick="uploadPhoto(this)">
+      <img src="https://media.istockphoto.com/id/1180394598/pt/vetorial/photo-camera-doodle-icon.jpg?s=612x612&w=0&k=20&c=fBGL-aWysSfVbq7BtEl1CNc4Ke8-VdIdGHBsNAelcA4=" alt="Foto 5">
+      <input type="file" accept="image/*" style="display:none;" onchange="previewPhoto(event, this)">
+      <div class="placeholder-label">Foto 5</div>
+    </div>
+    <div class="photo-frame" onclick="uploadPhoto(this)">
+      <img src="https://media.istockphoto.com/id/1180394598/pt/vetorial/photo-camera-doodle-icon.jpg?s=612x612&w=0&k=20&c=fBGL-aWysSfVbq7BtEl1CNc4Ke8-VdIdGHBsNAelcA4=" alt="Foto 6">
+      <input type="file" accept="image/*" style="display:none;" onchange="previewPhoto(event, this)">
+      <div class="placeholder-label">Foto 6</div>
+    </div>
+    <div class="photo-frame" onclick="uploadPhoto(this)">
+      <img src="https://media.istockphoto.com/id/1180394598/pt/vetorial/photo-camera-doodle-icon.jpg?s=612x612&w=0&k=20&c=fBGL-aWysSfVbq7BtEl1CNc4Ke8-VdIdGHBsNAelcA4=" alt="Foto 7">
+      <input type="file" accept="image/*" style="display:none;" onchange="previewPhoto(event, this)">
+      <div class="placeholder-label">Foto 7</div>
+    </div>
+    <div class="photo-frame" onclick="uploadPhoto(this)">
+      <img src="https://media.istockphoto.com/id/1180394598/pt/vetorial/photo-camera-doodle-icon.jpg?s=612x612&w=0&k=20&c=fBGL-aWysSfVbq7BtEl1CNc4Ke8-VdIdGHBsNAelcA4=" alt="Foto 8">
+      <input type="file" accept="image/*" style="display:none;" onchange="previewPhoto(event, this)">
+      <div class="placeholder-label">Foto 8</div>
+    </div>
+    <div class="photo-frame" onclick="uploadPhoto(this)">
+      <img src="https://media.istockphoto.com/id/1180394598/pt/vetorial/photo-camera-doodle-icon.jpg?s=612x612&w=0&k=20&c=fBGL-aWysSfVbq7BtEl1CNc4Ke8-VdIdGHBsNAelcA4=" alt="Foto 9">
+      <input type="file" accept="image/*" style="display:none;" onchange="previewPhoto(event, this)">
+      <div class="placeholder-label">Foto 9</div>
+    </div>
+    <div class="photo-frame" onclick="uploadPhoto(this)">
+      <img src="https://media.istockphoto.com/id/1180394598/pt/vetorial/photo-camera-doodle-icon.jpg?s=612x612&w=0&k=20&c=fBGL-aWysSfVbq7BtEl1CNc4Ke8-VdIdGHBsNAelcA4=" alt="Foto 10">
+      <input type="file" accept="image/*" style="display:none;" onchange="previewPhoto(event, this)">
+      <div class="placeholder-label">Foto 10</div>
+    </div>
+  </div>
+</div>
+
+<!-- Lightbox -->
+<div id="lightbox" onclick="closeLightbox()">
+  <span id="lightbox-close" onclick="closeLightbox()">&#215;</span>
+  <img id="lightbox-img" src="" alt="" onclick="event.stopPropagation()">
+</div>
+
+<script>
+  const overlay = document.getElementById('fade-overlay');
+  let transitioning = false;
+
+  function openLightbox(src, alt) {
+    const lb = document.getElementById('lightbox');
+    const img = document.getElementById('lightbox-img');
+    img.src = src;
+    img.alt = alt || '';
+    lb.classList.add('open');
+    document.body.style.overflow = 'hidden';
+  }
+  function closeLightbox() {
+    document.getElementById('lightbox').classList.remove('open');
+    document.body.style.overflow = '';
+  }
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') closeLightbox(); });
+
+  window.addEventListener('load', () => {
+    document.querySelectorAll('.product img, .item img').forEach(img => {
+      img.addEventListener('click', () => openLightbox(img.src, img.alt));
+    });
+  });
+
+  let musicStarted = false;
+  function startMusic() {
+    if (musicStarted) return;
+    musicStarted = true;
+    const player = document.getElementById('yt-player');
+    player.src = 'https://www.youtube.com/embed/_qDYz7k1wtM?autoplay=1&loop=1&playlist=_qDYz7k1wtM&controls=0&mute=0&start=0';
+  }
+
+  function goTo(id) {
+    if (transitioning) return;
+    transitioning = true;
+    overlay.classList.add('fading-out');
+    setTimeout(() => {
+      document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+      document.getElementById(id).classList.add('active');
+      window.scrollTo(0, 0);
+      overlay.classList.remove('fading-out');
+      transitioning = false;
+    }, 450);
+  }
+
+  function uploadPhoto(frame) {
+    const input = frame.querySelector('input[type="file"]');
+    input.click();
+  }
+
+  function previewPhoto(event, input) {
+    const file = event.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        const img = input.previousElementSibling;
+        img.src = e.target.result;
+        const label = input.nextElementSibling;
+        if (label) label.style.display = 'none';
+      };
+      reader.readAsDataURL(file);
+    }
+  }
+</script>
+
+</body>
+</html>

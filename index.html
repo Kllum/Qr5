@@ -5,11 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Experiência Interativa</title>
 <style>
-  * {
-    box-sizing: border-box;
-    margin: 0;
-    padding: 0;
-  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
 
   body {
     font-family: Arial, sans-serif;
@@ -43,9 +39,7 @@
     text-align: center;
     position: relative;
   }
-  .page.active {
-    display: flex;
-  }
+  .page.active { display: flex; }
 
   .overlay {
     position: absolute;
@@ -118,6 +112,7 @@
     object-fit: cover;
     border-radius: 10px;
     display: block;
+    cursor: zoom-in;
   }
 
   .product-name, .item-name {
@@ -146,9 +141,9 @@
   .photo-frame {
     width: clamp(100px, 28vw, 160px);
     text-align: center;
-    cursor: pointer;
     position: relative;
   }
+
   .photo-frame img {
     width: 100%;
     height: clamp(80px, 22vw, 130px);
@@ -158,13 +153,63 @@
     background: #eee;
     display: block;
     transition: border-color 0.2s;
+    cursor: pointer;
   }
-  .photo-frame:hover img { border-color: #ff8c00; }
+  .photo-frame.has-photo img {
+    border-color: #ff8c00;
+  }
+
   .photo-frame .placeholder-label {
     font-size: 0.7em;
     color: #888;
     margin-top: 4px;
   }
+
+  /* Add button (shown on empty slots) */
+  .photo-frame .btn-add {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    width: 22px;
+    height: 22px;
+    background: rgba(255,140,0,0.85);
+    color: #fff;
+    border: none;
+    border-radius: 50%;
+    font-size: 16px;
+    line-height: 1;
+    font-weight: bold;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 3;
+    padding: 0;
+  }
+
+  /* Delete button (shown on filled slots) */
+  .photo-frame .btn-delete {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    width: 22px;
+    height: 22px;
+    background: rgba(0,0,0,0.6);
+    color: #fff;
+    border: none;
+    border-radius: 50%;
+    font-size: 14px;
+    line-height: 1;
+    font-weight: bold;
+    cursor: pointer;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 3;
+    padding: 0;
+  }
+  .photo-frame.has-photo .btn-add { display: none; }
+  .photo-frame.has-photo .btn-delete { display: flex; }
 
   #pagina1 { background: linear-gradient(to bottom, #ffb347, #ffcc33); color: #fff; }
 
@@ -172,11 +217,19 @@
     background: url('https://st2.depositphotos.com/1073974/7261/i/950/depositphotos_72613027-stock-photo-page-of-vintage-photo-album.jpg') center/cover no-repeat;
     color: #333;
   }
+  #pagina7::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: rgba(255,255,255,0.25);
+    z-index: 0;
+  }
   #pagina7 h1 { color: #C69A5A; }
   #pagina7 p { color: #222; }
 
   .item .btn { margin-top: 10px; }
 
+  /* Lightbox */
   #lightbox {
     display: none;
     position: fixed;
@@ -212,7 +265,15 @@
     line-height: 1;
     user-select: none;
   }
-  .product img, .item img { cursor: zoom-in; }
+
+  /* Hint text */
+  .album-hint {
+    font-size: 0.82em;
+    color: #444;
+    margin-bottom: 4px;
+    z-index: 2;
+    position: relative;
+  }
 </style>
 </head>
 <body>
@@ -234,8 +295,8 @@
 
 <!-- Página 2 -->
 <div class="page" id="pagina2">
-  <h1>Algumas coisas têm seu preço.</h1>
-  <p>Ainda que voláteis.</p>
+  <h1 style="color:#333">Algumas coisas têm seu preço.</h1>
+  <p style="color:#555">Ainda que voláteis.</p>
   <div class="products">
     <div class="product">
       <img src="https://i0.wp.com/loucosporcarro.com.br/wp-content/uploads/2016/12/Blog-1-2.jpg?resize=800%2C450&ssl=1" alt="Honda Civic">
@@ -278,11 +339,11 @@
 
 <!-- Página 3 -->
 <div class="page" id="pagina3">
-  <h1>Outras... não têm preço.</h1>
-  <p>Todas as opções a seguir são gratuitas.</p>
+  <h1 style="color:#333">Outras... não têm preço.</h1>
+  <p style="color:#555">Todas as opções a seguir são gratuitas.</p>
   <div class="free-items">
     <div class="item">
-      <img src="https://img.freepik.com/vetores-premium/de-volta-a-escola-construir-fortes-relacoes-com-os-clientes_1236599-22139.jpg?ga=GA1.1.639260951.1773391713&semt=ais_hybrid&w=740&q=80" alt="Sorriso Bobo">
+      <img src="https://img.freepik.com/vetores-premium/de-volta-a-escola-construir-fortes-relacoes-com-os-clientes_1236599-22139.jpg?semt=ais_hybrid&w=740&q=80" alt="Sorriso Bobo">
       <div class="item-name">Sorriso Bobo</div>
     </div>
     <div class="item">
@@ -352,59 +413,10 @@
 <!-- Página 7 -->
 <div class="page" id="pagina7">
   <h1>Memórias não nascem prontas,<br>são criadas a cada instante.</h1>
-  <p>(Clique nas molduras para adicionar suas próprias fotos)</p>
-  <div class="album">
-    <div class="photo-frame" onclick="uploadPhoto(this)">
-      <img src="https://media.istockphoto.com/id/1180394598/pt/vetorial/photo-camera-doodle-icon.jpg?s=612x612&w=0&k=20&c=fBGL-aWysSfVbq7BtEl1CNc4Ke8-VdIdGHBsNAelcA4=" alt="Foto 1">
-      <input type="file" accept="image/*" style="display:none;" onchange="previewPhoto(event, this)">
-      <div class="placeholder-label">Foto 1</div>
-    </div>
-    <div class="photo-frame" onclick="uploadPhoto(this)">
-      <img src="https://media.istockphoto.com/id/1180394598/pt/vetorial/photo-camera-doodle-icon.jpg?s=612x612&w=0&k=20&c=fBGL-aWysSfVbq7BtEl1CNc4Ke8-VdIdGHBsNAelcA4=" alt="Foto 2">
-      <input type="file" accept="image/*" style="display:none;" onchange="previewPhoto(event, this)">
-      <div class="placeholder-label">Foto 2</div>
-    </div>
-    <div class="photo-frame" onclick="uploadPhoto(this)">
-      <img src="https://media.istockphoto.com/id/1180394598/pt/vetorial/photo-camera-doodle-icon.jpg?s=612x612&w=0&k=20&c=fBGL-aWysSfVbq7BtEl1CNc4Ke8-VdIdGHBsNAelcA4=" alt="Foto 3">
-      <input type="file" accept="image/*" style="display:none;" onchange="previewPhoto(event, this)">
-      <div class="placeholder-label">Foto 3</div>
-    </div>
-    <div class="photo-frame" onclick="uploadPhoto(this)">
-      <img src="https://media.istockphoto.com/id/1180394598/pt/vetorial/photo-camera-doodle-icon.jpg?s=612x612&w=0&k=20&c=fBGL-aWysSfVbq7BtEl1CNc4Ke8-VdIdGHBsNAelcA4=" alt="Foto 4">
-      <input type="file" accept="image/*" style="display:none;" onchange="previewPhoto(event, this)">
-      <div class="placeholder-label">Foto 4</div>
-    </div>
-    <div class="photo-frame" onclick="uploadPhoto(this)">
-      <img src="https://media.istockphoto.com/id/1180394598/pt/vetorial/photo-camera-doodle-icon.jpg?s=612x612&w=0&k=20&c=fBGL-aWysSfVbq7BtEl1CNc4Ke8-VdIdGHBsNAelcA4=" alt="Foto 5">
-      <input type="file" accept="image/*" style="display:none;" onchange="previewPhoto(event, this)">
-      <div class="placeholder-label">Foto 5</div>
-    </div>
-    <div class="photo-frame" onclick="uploadPhoto(this)">
-      <img src="https://media.istockphoto.com/id/1180394598/pt/vetorial/photo-camera-doodle-icon.jpg?s=612x612&w=0&k=20&c=fBGL-aWysSfVbq7BtEl1CNc4Ke8-VdIdGHBsNAelcA4=" alt="Foto 6">
-      <input type="file" accept="image/*" style="display:none;" onchange="previewPhoto(event, this)">
-      <div class="placeholder-label">Foto 6</div>
-    </div>
-    <div class="photo-frame" onclick="uploadPhoto(this)">
-      <img src="https://media.istockphoto.com/id/1180394598/pt/vetorial/photo-camera-doodle-icon.jpg?s=612x612&w=0&k=20&c=fBGL-aWysSfVbq7BtEl1CNc4Ke8-VdIdGHBsNAelcA4=" alt="Foto 7">
-      <input type="file" accept="image/*" style="display:none;" onchange="previewPhoto(event, this)">
-      <div class="placeholder-label">Foto 7</div>
-    </div>
-    <div class="photo-frame" onclick="uploadPhoto(this)">
-      <img src="https://media.istockphoto.com/id/1180394598/pt/vetorial/photo-camera-doodle-icon.jpg?s=612x612&w=0&k=20&c=fBGL-aWysSfVbq7BtEl1CNc4Ke8-VdIdGHBsNAelcA4=" alt="Foto 8">
-      <input type="file" accept="image/*" style="display:none;" onchange="previewPhoto(event, this)">
-      <div class="placeholder-label">Foto 8</div>
-    </div>
-    <div class="photo-frame" onclick="uploadPhoto(this)">
-      <img src="https://media.istockphoto.com/id/1180394598/pt/vetorial/photo-camera-doodle-icon.jpg?s=612x612&w=0&k=20&c=fBGL-aWysSfVbq7BtEl1CNc4Ke8-VdIdGHBsNAelcA4=" alt="Foto 9">
-      <input type="file" accept="image/*" style="display:none;" onchange="previewPhoto(event, this)">
-      <div class="placeholder-label">Foto 9</div>
-    </div>
-    <div class="photo-frame" onclick="uploadPhoto(this)">
-      <img src="https://media.istockphoto.com/id/1180394598/pt/vetorial/photo-camera-doodle-icon.jpg?s=612x612&w=0&k=20&c=fBGL-aWysSfVbq7BtEl1CNc4Ke8-VdIdGHBsNAelcA4=" alt="Foto 10">
-      <input type="file" accept="image/*" style="display:none;" onchange="previewPhoto(event, this)">
-      <div class="placeholder-label">Foto 10</div>
-    </div>
-  </div>
+  <p class="album-hint" style="z-index:2;position:relative;">
+    Clique no <strong>+</strong> para adicionar foto &nbsp;·&nbsp; clique na foto para ampliar &nbsp;·&nbsp; <strong>×</strong> para remover
+  </p>
+  <div class="album" id="album"></div>
 </div>
 
 <!-- Lightbox -->
@@ -414,36 +426,9 @@
 </div>
 
 <script>
+  // ── Fade transition ───────────────────────────────────────────────────────
   const overlay = document.getElementById('fade-overlay');
   let transitioning = false;
-
-  function openLightbox(src, alt) {
-    const lb = document.getElementById('lightbox');
-    const img = document.getElementById('lightbox-img');
-    img.src = src;
-    img.alt = alt || '';
-    lb.classList.add('open');
-    document.body.style.overflow = 'hidden';
-  }
-  function closeLightbox() {
-    document.getElementById('lightbox').classList.remove('open');
-    document.body.style.overflow = '';
-  }
-  document.addEventListener('keydown', e => { if (e.key === 'Escape') closeLightbox(); });
-
-  window.addEventListener('load', () => {
-    document.querySelectorAll('.product img, .item img').forEach(img => {
-      img.addEventListener('click', () => openLightbox(img.src, img.alt));
-    });
-  });
-
-  let musicStarted = false;
-  function startMusic() {
-    if (musicStarted) return;
-    musicStarted = true;
-    const player = document.getElementById('yt-player');
-    player.src = 'https://www.youtube.com/embed/_qDYz7k1wtM?autoplay=1&loop=1&playlist=_qDYz7k1wtM&controls=0&mute=0&start=0';
-  }
 
   function goTo(id) {
     if (transitioning) return;
@@ -458,100 +443,124 @@
     }, 450);
   }
 
-  function uploadPhoto(frame) {
-    const input = frame.querySelector('input[type="file"]');
-    input.click();
+  // ── Music ─────────────────────────────────────────────────────────────────
+  let musicStarted = false;
+  function startMusic() {
+    if (musicStarted) return;
+    musicStarted = true;
+    const player = document.getElementById('yt-player');
+    player.src = 'https://www.youtube.com/embed/_qDYz7k1wtM?autoplay=1&loop=1&playlist=_qDYz7k1wtM&controls=0&mute=0&start=0';
   }
 
-  function previewPhoto(event, input) {
-  const file = event.target.files[0];
-
-  if (file) {
-    const reader = new FileReader();
-
-    reader.onload = function(e) {
-      const img = input.previousElementSibling;
-      img.src = e.target.result;
-
-      localStorage.setItem("foto", e.target.result);
-
-      const label = input.nextElementSibling;
-<script>
-  const overlay = document.getElementById('fade-overlay');
-  let transitioning = false;
-
+  // ── Lightbox ──────────────────────────────────────────────────────────────
   function openLightbox(src, alt) {
-    const lb = document.getElementById('lightbox');
-    const img = document.getElementById('lightbox-img');
-    img.src = src;
-    img.alt = alt || '';
-    lb.classList.add('open');
+    document.getElementById('lightbox-img').src = src;
+    document.getElementById('lightbox-img').alt = alt || '';
+    document.getElementById('lightbox').classList.add('open');
     document.body.style.overflow = 'hidden';
   }
-
   function closeLightbox() {
     document.getElementById('lightbox').classList.remove('open');
-const overlay = document.getElementById('fade-overlay');
-let transitioning = false;
+    document.body.style.overflow = '';
+  }
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') closeLightbox(); });
 
-function goTo(id) {
-  if (transitioning) return;
-  transitioning = true;
-
-  overlay.classList.add('fading-out');
-
-  setTimeout(() => {
-    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-    document.getElementById(id).classList.add('active');
-    window.scrollTo(0, 0);
-    overlay.classList.remove('fading-out');
-    transitioning = false;
-  }, 450);
-}
-
-function uploadPhoto(frame) {
-  const input = frame.querySelector('input[type="file"]');
-  input.click();
-}
-
-function previewPhoto(event, input) {
-  const file = event.target.files[0];
-  if (!file) return;
-
-  const reader = new FileReader();
-
-  reader.onload = function(e) {
-    const frame = input.parentElement;
-    const img = frame.querySelector('img');
-
-    img.src = e.target.result;
-
-    // salva por frame fixo (SEM index, pra evitar bug)
-    const key = frame.querySelector('input').getAttribute('onchange');
-    localStorage.setItem(frame.querySelector('img').alt, e.target.result);
-
-    const label = frame.querySelector('.placeholder-label');
-    if (label) label.style.display = 'none';
-  };
-
-  reader.readAsDataURL(file);
-
-  input.value = '';
-}
-
-window.addEventListener("load", function () {
-  document.querySelectorAll('.photo-frame').forEach(frame => {
-    const img = frame.querySelector('img');
-    const key = img.alt;
-    const saved = localStorage.getItem(key);
-
-    if (saved) {
-      img.src = saved;
-      const label = frame.querySelector('.placeholder-label');
-      if (label) label.style.display = "none";
-    }
+  // Lightbox for product/item images
+  window.addEventListener('load', () => {
+    document.querySelectorAll('.product img, .item img').forEach(img => {
+      img.addEventListener('click', () => openLightbox(img.src, img.alt));
+    });
   });
-});
-     </script>
-</body>
+
+  // ── Photo album ───────────────────────────────────────────────────────────
+  const NUM_SLOTS = 10;
+  const CAMERA_SRC = 'https://media.istockphoto.com/id/1180394598/pt/vetorial/photo-camera-doodle-icon.jpg?s=612x612&w=0&k=20&c=fBGL-aWysSfVbq7BtEl1CNc4Ke8-VdIdGHBsNAelcA4=';
+
+  // Each slot stores: { src: string } or null in localStorage key 'photo_<index>'
+  function loadSlot(i) {
+    try { return JSON.parse(localStorage.getItem('photo_' + i)); } catch { return null; }
+  }
+  function saveSlot(i, data) {
+    if (data === null) localStorage.removeItem('photo_' + i);
+    else localStorage.setItem('photo_' + i, JSON.stringify(data));
+  }
+
+  function buildAlbum() {
+    const album = document.getElementById('album');
+    album.innerHTML = '';
+    for (let i = 0; i < NUM_SLOTS; i++) {
+      const slot = loadSlot(i);
+      const frame = document.createElement('div');
+      frame.className = 'photo-frame' + (slot ? ' has-photo' : '');
+      frame.dataset.index = i;
+
+      const img = document.createElement('img');
+      img.src = slot ? slot.src : CAMERA_SRC;
+      img.alt = 'Foto ' + (i + 1);
+      if (slot) {
+        img.addEventListener('click', () => openLightbox(img.src, img.alt));
+      } else {
+        img.addEventListener('click', () => triggerUpload(i));
+      }
+
+      const fileInput = document.createElement('input');
+      fileInput.type = 'file';
+      fileInput.accept = 'image/*';
+      fileInput.style.display = 'none';
+      fileInput.addEventListener('change', e => handleFile(e, i));
+
+      // Add (+) button
+      const btnAdd = document.createElement('button');
+      btnAdd.className = 'btn-add';
+      btnAdd.title = 'Adicionar foto';
+      btnAdd.textContent = '+';
+      btnAdd.addEventListener('click', e => { e.stopPropagation(); triggerUpload(i); });
+
+      // Delete (×) button
+      const btnDel = document.createElement('button');
+      btnDel.className = 'btn-delete';
+      btnDel.title = 'Remover foto';
+      btnDel.textContent = '×';
+      btnDel.addEventListener('click', e => { e.stopPropagation(); deleteSlot(i); });
+
+      const label = document.createElement('div');
+      label.className = 'placeholder-label';
+      label.textContent = slot ? '' : 'Foto ' + (i + 1);
+
+      frame.appendChild(img);
+      frame.appendChild(fileInput);
+      frame.appendChild(btnAdd);
+      frame.appendChild(btnDel);
+      frame.appendChild(label);
+      album.appendChild(frame);
+    }
+  }
+
+  function triggerUpload(i) {
+    const frame = document.querySelector('.photo-frame[data-index="' + i + '"]');
+    frame.querySelector('input[type=file]').click();
+  }
+
+  function handleFile(e, i) {
+    const file = e.target.files[0];
+    if (!file) return;
+    e.target.value = '';
+    const reader = new FileReader();
+    reader.onload = function(ev) {
+      saveSlot(i, { src: ev.target.result });
+      buildAlbum();
+    };
+    reader.readAsDataURL(file);
+  }
+
+  function deleteSlot(i) {
+    if (!confirm('Deseja remover esta foto?')) return;
+    saveSlot(i, null);
+    buildAlbum();
+  }
+
+  // Build album on load
+  window.addEventListener('load', buildAlbum);
+</script>
+<script src="https://replit-cdn.com/replit-pill/replit-pill.global.js" data-repl-id="b7588b51-1f90-47fb-b8af-9c2763b3fa4d"></script></body>
 </html>

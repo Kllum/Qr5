@@ -476,29 +476,103 @@
       localStorage.setItem("foto", e.target.result);
 
       const label = input.nextElementSibling;
-      if (label) label.style.display = 'none';
-    };
+<script>
+  const overlay = document.getElementById('fade-overlay');
+  let transitioning = false;
 
-    reader.readAsDataURL(file);
+  function openLightbox(src, alt) {
+    const lb = document.getElementById('lightbox');
+    const img = document.getElementById('lightbox-img');
+    img.src = src;
+    img.alt = alt || '';
+    lb.classList.add('open');
+    document.body.style.overflow = 'hidden';
   }
 
-  input.value = '';
-}
-
-window.onload = function () {
-  const saved = localStorage.getItem("foto");
-
-  if (saved) {
-    const img = document.querySelector("img");
-    if (img) img.src = saved;
+  function closeLightbox() {
+    document.getElementById('lightbox').classList.remove('open');
+    document.body.style.overflow = '';
   }
-};
 
-</script>
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') closeLightbox();
+  });
 
-</body>
-</html>
+  window.addEventListener('load', () => {
+    document.querySelectorAll('.product img, .item img').forEach(img => {
+      img.addEventListener('click', () => openLightbox(img.src, img.alt));
+    });
+  });
 
+  let musicStarted = false;
+  function startMusic() {
+    if (musicStarted) return;
+    musicStarted = true;
+    const player = document.getElementById('yt-player');
+    player.src = 'https://www.youtube.com/embed/_qDYz7k1wtM?autoplay=1&loop=1&playlist=_qDYz7k1wtM&controls=0&mute=0';
+  }
 
+  function goTo(id) {
+    if (transitioning) return;
+    transitioning = true;
+
+    overlay.classList.add('fading-out');
+
+    setTimeout(() => {
+      document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+      document.getElementById(id).classList.add('active');
+      window.scrollTo(0, 0);
+      overlay.classList.remove('fading-out');
+      transitioning = false;
+    }, 450);
+  }
+
+  function uploadPhoto(frame) {
+    const input = frame.querySelector('input[type="file"]');
+    input.click();
+  }
+
+  // 🔥 SALVAR CADA FOTO SEPARADAMENTE
+  function previewPhoto(event, input) {
+    const file = event.target.files[0];
+
+    if (file) {
+      const reader = new FileReader();
+
+      reader.onload = function(e) {
+        const frame = input.parentElement;
+        const img = frame.querySelector('img');
+        const index = Array.from(document.querySelectorAll('.photo-frame')).indexOf(frame);
+
+        img.src = e.target.result;
+
+        localStorage.setItem("foto_" + index, e.target.result);
+
+        const label = input.nextElementSibling;
+        if (label) label.style.display = 'none';
+      };
+
+      reader.readAsDataURL(file);
+    }
+
+    input.value = '';
+  }
+
+  // 🔥 CARREGAR TODAS AS FOTOS AO ABRIR
+  window.addEventListener("load", function () {
+    const frames = document.querySelectorAll('.photo-frame');
+
+    frames.forEach((frame, index) => {
+      const saved = localStorage.getItem("foto_" + index);
+      const img = frame.querySelector("img");
+
+      if (saved) {
+        img.src = saved;
+        const label = frame.querySelector(".placeholder-label");
+        if (label) label.style.display = "none";
+      }
+    });
+  });
+     </script>
 </body>
 </html>

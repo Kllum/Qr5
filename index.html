@@ -280,20 +280,12 @@
 
 <div id="fade-overlay"></div>
 
-<iframe id="yt-player"
+<iframe id="spotify-player"
   src=""
   style="position:fixed;top:-1px;left:-1px;width:1px;height:1px;border:none;pointer-events:none;opacity:0;"
-  allow="autoplay; encrypted-media">
+  allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+  loading="lazy">
 </iframe>
-
-<!-- Music toggle button -->
-<button id="music-btn" onclick="toggleMusic()" title="M&#250;sica" style="
-  position:fixed;bottom:18px;right:18px;z-index:9998;
-  width:44px;height:44px;border-radius:50%;border:none;
-  background:rgba(0,0,0,0.55);color:#fff;font-size:20px;
-  cursor:pointer;display:none;align-items:center;justify-content:center;
-  box-shadow:0 2px 8px rgba(0,0,0,0.4);
-">&#127925;</button>
 
 <!-- P&#225;gina 1 -->
 <div class="page active" id="pagina1">
@@ -453,36 +445,14 @@
   }
 
   //    Music                                                                  
-  const MUSIC_SRC = 'https://www.youtube.com/embed/_qDYz7k1wtM?autoplay=1&loop=1&playlist=_qDYz7k1wtM&controls=0&mute=0&start=0';
+  const MUSIC_SRC = 'https://open.spotify.com/embed/track/3be9ACTxtcL6Zm4vJRUiPG?utm_source=generator&autoplay=1';
   let musicStarted = false;
-  let musicPlaying = false;
 
   function startMusic() {
     if (musicStarted) return;
     musicStarted = true;
-    musicPlaying = true;
-    const player = document.getElementById('yt-player');
+    const player = document.getElementById('spotify-player');
     player.src = MUSIC_SRC;
-    const btn = document.getElementById('music-btn');
-    btn.style.display = 'flex';
-    btn.textContent = '\u{1f507}';
-    btn.title = 'Pausar m\u{fa}sica';
-  }
-
-  function toggleMusic() {
-    const player = document.getElementById('yt-player');
-    const btn = document.getElementById('music-btn');
-    if (musicPlaying) {
-      player.src = '';
-      musicPlaying = false;
-      btn.textContent = '\u{1f3b5}';
-      btn.title = 'Tocar m\u{fa}sica';
-    } else {
-      player.src = MUSIC_SRC;
-      musicPlaying = true;
-      btn.textContent = '\u{1f507}';
-      btn.title = 'Pausar m\u{fa}sica';
-    }
   }
 
   //    Lightbox                                                               

@@ -468,22 +468,37 @@
 
   if (file) {
     const reader = new FileReader();
+
     reader.onload = function(e) {
       const img = input.previousElementSibling;
       img.src = e.target.result;
 
+      localStorage.setItem("foto", e.target.result);
+
       const label = input.nextElementSibling;
       if (label) label.style.display = 'none';
     };
+
     reader.readAsDataURL(file);
   }
 
-  // 🔑 Isso resolve o problema
   input.value = '';
+}
+
+window.onload = function () {
+  const saved = localStorage.getItem("foto");
+
+  if (saved) {
+    const img = document.querySelector("img");
+    if (img) img.src = saved;
   }
-    }
-  }
+};
+
 </script>
+
+</body>
+</html>
+
 
 </body>
 </html>

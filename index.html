@@ -464,16 +464,23 @@
   }
 
   function previewPhoto(event, input) {
-    const file = event.target.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = function(e) {
-        const img = input.previousElementSibling;
-        img.src = e.target.result;
-        const label = input.nextElementSibling;
-        if (label) label.style.display = 'none';
-      };
-      reader.readAsDataURL(file);
+  const file = event.target.files[0];
+
+  if (file) {
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      const img = input.previousElementSibling;
+      img.src = e.target.result;
+
+      const label = input.nextElementSibling;
+      if (label) label.style.display = 'none';
+    };
+    reader.readAsDataURL(file);
+  }
+
+  // 🔑 Isso resolve o problema
+  input.value = '';
+  }
     }
   }
 </script>

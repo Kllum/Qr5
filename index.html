@@ -491,88 +491,67 @@
 
   function closeLightbox() {
     document.getElementById('lightbox').classList.remove('open');
-    document.body.style.overflow = '';
-  }
+const overlay = document.getElementById('fade-overlay');
+let transitioning = false;
 
-  document.addEventListener('keydown', e => {
-    if (e.key === 'Escape') closeLightbox();
-  });
+function goTo(id) {
+  if (transitioning) return;
+  transitioning = true;
 
-  window.addEventListener('load', () => {
-    document.querySelectorAll('.product img, .item img').forEach(img => {
-      img.addEventListener('click', () => openLightbox(img.src, img.alt));
-    });
-  });
+  overlay.classList.add('fading-out');
 
-  let musicStarted = false;
-  function startMusic() {
-    if (musicStarted) return;
-    musicStarted = true;
-    const player = document.getElementById('yt-player');
-    player.src = 'https://www.youtube.com/embed/_qDYz7k1wtM?autoplay=1&loop=1&playlist=_qDYz7k1wtM&controls=0&mute=0';
-  }
+  setTimeout(() => {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+    window.scrollTo(0, 0);
+    overlay.classList.remove('fading-out');
+    transitioning = false;
+  }, 450);
+}
 
-  function goTo(id) {
-    if (transitioning) return;
-    transitioning = true;
+function uploadPhoto(frame) {
+  const input = frame.querySelector('input[type="file"]');
+  input.click();
+}
 
-    overlay.classList.add('fading-out');
+function previewPhoto(event, input) {
+  const file = event.target.files[0];
+  if (!file) return;
 
-    setTimeout(() => {
-      document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-      document.getElementById(id).classList.add('active');
-      window.scrollTo(0, 0);
-      overlay.classList.remove('fading-out');
-      transitioning = false;
-    }, 450);
-  }
+  const reader = new FileReader();
 
-  function uploadPhoto(frame) {
-    const input = frame.querySelector('input[type="file"]');
-    input.click();
-  }
+  reader.onload = function(e) {
+    const frame = input.parentElement;
+    const img = frame.querySelector('img');
 
-  // 🔥 SALVAR CADA FOTO SEPARADAMENTE
-  function previewPhoto(event, input) {
-    const file = event.target.files[0];
+    img.src = e.target.result;
 
-    if (file) {
-      const reader = new FileReader();
+    // salva por frame fixo (SEM index, pra evitar bug)
+    const key = frame.querySelector('input').getAttribute('onchange');
+    localStorage.setItem(frame.querySelector('img').alt, e.target.result);
 
-      reader.onload = function(e) {
-        const frame = input.parentElement;
-        const img = frame.querySelector('img');
-        const index = Array.from(document.querySelectorAll('.photo-frame')).indexOf(frame);
+    const label = frame.querySelector('.placeholder-label');
+    if (label) label.style.display = 'none';
+  };
 
-        img.src = e.target.result;
+  reader.readAsDataURL(file);
 
-        localStorage.setItem("foto_" + index, e.target.result);
+  input.value = '';
+}
 
-        const label = input.nextElementSibling;
-        if (label) label.style.display = 'none';
-      };
+window.addEventListener("load", function () {
+  document.querySelectorAll('.photo-frame').forEach(frame => {
+    const img = frame.querySelector('img');
+    const key = img.alt;
+    const saved = localStorage.getItem(key);
 
-      reader.readAsDataURL(file);
+    if (saved) {
+      img.src = saved;
+      const label = frame.querySelector('.placeholder-label');
+      if (label) label.style.display = "none";
     }
-
-    input.value = '';
-  }
-
-  // 🔥 CARREGAR TODAS AS FOTOS AO ABRIR
-  window.addEventListener("load", function () {
-    const frames = document.querySelectorAll('.photo-frame');
-
-    frames.forEach((frame, index) => {
-      const saved = localStorage.getItem("foto_" + index);
-      const img = frame.querySelector("img");
-
-      if (saved) {
-        img.src = saved;
-        const label = frame.querySelector(".placeholder-label");
-        if (label) label.style.display = "none";
-      }
-    });
   });
+});
      </script>
 </body>
 </html>

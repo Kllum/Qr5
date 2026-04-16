@@ -280,11 +280,10 @@
 
 <div id="fade-overlay"></div>
 
-<iframe id="spotify-player"
+<iframe id="yt-player"
   src=""
   style="position:fixed;top:-1px;left:-1px;width:1px;height:1px;border:none;pointer-events:none;opacity:0;"
-  allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
-  loading="lazy">
+  allow="autoplay; encrypted-media">
 </iframe>
 
 <!-- P&#225;gina 1 -->
@@ -445,13 +444,13 @@
   }
 
   //    Music                                                                  
-  const MUSIC_SRC = 'https://open.spotify.com/embed/track/3be9ACTxtcL6Zm4vJRUiPG?utm_source=generator&autoplay=1';
+  const MUSIC_SRC = 'https://www.youtube.com/embed/_qDYz7k1wtM?autoplay=1&loop=1&playlist=_qDYz7k1wtM&controls=0&mute=0&start=0';
   let musicStarted = false;
 
   function startMusic() {
     if (musicStarted) return;
     musicStarted = true;
-    const player = document.getElementById('spotify-player');
+    const player = document.getElementById('yt-player');
     player.src = MUSIC_SRC;
   }
 
